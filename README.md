@@ -26,19 +26,19 @@ docker-compose up --build
 ```
 
 Access the services:
-- **API Documentation**: http://localhost:8080/swagger-ui.html
-- **Kafka Events UI**: http://localhost:8090
+- **API Documentation**: http://localhost:8082/swagger-ui.html
+- **Kafka Events UI**: http://localhost:8091
 - **Database**: localhost:5432 (postgres/postgres)
 
 ## Quick Test Flow
 
 1. **Build & Start**: `docker-compose up --build` (Takes 1-3 minutes)
 2. **Test API**:
-    - Go to http://localhost:8080/swagger-ui.html
+    - Go to http://localhost:8082/swagger-ui.html
     - For example, try POST `/api/v1/resources/export-all` → Click "Try it out" → Click "Execute"
     - (This endpoint requires no input data, unlike creating new resources)
 3. **Check Events**:
-    - Go to http://localhost:8090
+    - Go to http://localhost:8091
     - Click "Topics" → Click "resource-events" → Click "Messages"
     - You can see your Kafka events here
 
