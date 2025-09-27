@@ -55,14 +55,14 @@ Access the services:
 
 ## Testing the API
 
-Open http://localhost:8080/swagger-ui.html and try any endpoint interactively. Check Kafka events at http://localhost:8090.
+Open http://localhost:8082/swagger-ui.html and try any endpoint interactively. Check Kafka events at http://localhost:8091.
 
 ## Kafka Events
 
 Every resource operation automatically publishes events to `resource-events` topic:
 1. Create/Update/Delete a resource via API
 2. Event is published to Kafka
-3. View events in Kafka UI: http://localhost:8090
+3. View events in Kafka UI: http://localhost:8091
 
 ## Technology Stack
 
@@ -76,11 +76,12 @@ Every resource operation automatically publishes events to `resource-events` top
 
 ## Sample Data
 
-Application starts with 4 pre-loaded resources:
-1. Estonia Metering Point (Tallinn) - Residential consumption
-2. Finland Connection Point (Helsinki) - Active status
-3. Finland Metering Point (Helsinki) - Industrial consumption
-4. Estonia Connection Point (Tallinn) - Inactive status
+- **500,000 resources** (250K Metering Points + 250K Connection Points)
+- **~1.25M characteristics** (average 2.5 per resource)
+- **Distribution**: 50% Estonia (EE), 50% Finland (FI)
+- **Cities**: Tallinn, Tartu, Narva (EE) / Helsinki, Turku, Tampere (FI)
+- **Generation time**: ~2 minutes on first startup
+
 
 ## Running Tests
 
