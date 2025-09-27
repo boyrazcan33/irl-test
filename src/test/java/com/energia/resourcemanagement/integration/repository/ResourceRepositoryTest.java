@@ -22,6 +22,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -238,8 +240,10 @@ class ResourceRepositoryTest {
         resourceRepository.save(resource2);
         entityManager.flush();
 
-        List<Resource> allResources = resourceRepository.findAllWithCharacteristics();
-
+        List<Resource> allResources;
+        try (Stream<Resource> stream = resourceRepository.findAllWithCharacteristics()) {
+            allResources = stream.collect(Collectors.toList());
+        }
         assertThat(allResources).hasSize(2);
 
         Resource foundResource1 = allResources.stream()

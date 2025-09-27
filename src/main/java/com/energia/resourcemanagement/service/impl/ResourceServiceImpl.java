@@ -26,6 +26,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -41,11 +44,9 @@ public class ResourceServiceImpl implements ResourceService {
     public ResourceResponse createResource(CreateResourceRequest request) {
         log.info("Creating new resource with type: {} and country: {}", request.getType(), request.getCountryCode());
 
-        // Map request to entity
         Resource resource = resourceMapper.toEntity(request);
         resource.setLocation(resourceMapper.toLocation(request.getLocation()));
 
-        // Add characteristics if present
         if (request.getCharacteristics() != null && !request.getCharacteristics().isEmpty()) {
             validateCharacteristics(request.getCharacteristics());
 
@@ -55,11 +56,9 @@ public class ResourceServiceImpl implements ResourceService {
             });
         }
 
-        // Save resource
         Resource savedResource = resourceRepository.save(resource);
         log.info("Resource created with id: {}", savedResource.getId());
 
-        // Send event to Kafka
         ResourceResponse response = resourceMapper.toResponse(savedResource);
         publishResourceEvent(EventType.RESOURCE_CREATED, savedResource.getId(), response);
 
@@ -107,22 +106,18 @@ public class ResourceServiceImpl implements ResourceService {
         Resource resource = resourceRepository.findByIdWithCharacteristics(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
 
-        // Check version for optimistic locking if provided
         if (version != null && !version.equals(resource.getVersion())) {
             throw new org.springframework.orm.ObjectOptimisticLockingFailureException(
                     Resource.class, id);
         }
 
-        // Update location if provided
         if (request.getLocation() != null) {
             resource.setLocation(resourceMapper.toLocation(request.getLocation()));
         }
 
-        // Update characteristics if provided
         if (request.getCharacteristics() != null) {
             validateCharacteristics(request.getCharacteristics());
 
-            // Clear existing and add new characteristics
             resource.getCharacteristics().clear();
             request.getCharacteristics().forEach(charDTO -> {
                 Characteristic characteristic = resourceMapper.toCharacteristic(charDTO);
@@ -133,7 +128,6 @@ public class ResourceServiceImpl implements ResourceService {
         Resource updatedResource = resourceRepository.save(resource);
         log.info("Resource updated successfully with id: {}", id);
 
-        // Send event to Kafka
         ResourceResponse response = resourceMapper.toResponse(updatedResource);
         publishResourceEvent(EventType.RESOURCE_UPDATED, updatedResource.getId(), response);
 
@@ -153,32 +147,43 @@ public class ResourceServiceImpl implements ResourceService {
 
         log.info("Resource deleted successfully with id: {}", id);
 
-        // Send event to Kafka
         publishResourceEvent(EventType.RESOURCE_DELETED, id, response);
     }
 
+    // CHANGED: Complete method replacement - stream-based implementation
     @Override
     @Transactional(readOnly = true)
     public void exportAllToKafka() {
-        log.info("Starting bulk export of all resources to Kafka");
+        log.info("Starting stream-based bulk export");
+        AtomicLong totalProcessed = new AtomicLong(0);
 
-        List<Resource> resources = resourceRepository.findAllWithCharacteristics();
-        List<ResourceResponse> responses = resourceMapper.toResponseList(resources);
+        try (Stream<Resource> stream = resourceRepository.findAllWithCharacteristics()) {
 
-        eventProducer.sendBulkExport(responses);
+            stream.collect(Collectors.groupingBy(resource ->
+                            totalProcessed.getAndIncrement() / 20000))
+                    .values()
+                    .parallelStream()
+                    .forEach(chunk -> {
+                        List<ResourceResponse> responses = resourceMapper.toResponseList(chunk);
+                        eventProducer.sendBulkExport(responses);
+                        log.info("Processed chunk, total: {}", totalProcessed.get());
+                    });
+        }
 
-        log.info("Bulk export completed. Total resources exported: {}", resources.size());
+        log.info("Stream export completed. Total: {}", totalProcessed.get());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ResourceResponse> getAllResourcesForExport() {
-        List<Resource> resources = resourceRepository.findAllWithCharacteristics();
-        return resourceMapper.toResponseList(resources);
+        // CHANGED: Modified to use streaming approach for consistency
+        try (Stream<Resource> stream = resourceRepository.findAllWithCharacteristics()) {
+            List<Resource> resources = stream.collect(Collectors.toList());
+            return resourceMapper.toResponseList(resources);
+        }
     }
 
     private void validateCharacteristics(List<com.energia.resourcemanagement.dto.common.CharacteristicDTO> characteristics) {
-        // Check for duplicates based on code + type combination
         Set<String> seen = new HashSet<>();
         for (com.energia.resourcemanagement.dto.common.CharacteristicDTO char1 : characteristics) {
             String key = char1.getCode() + "_" + char1.getType();
@@ -201,7 +206,6 @@ public class ResourceServiceImpl implements ResourceService {
             eventProducer.sendResourceEvent(event);
         } catch (Exception e) {
             log.error("Failed to publish event for resource {}: {}", resourceId, e.getMessage());
-            // Don't fail the operation if event publishing fails
         }
     }
 }

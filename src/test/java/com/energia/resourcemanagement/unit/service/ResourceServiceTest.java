@@ -325,7 +325,7 @@ class ResourceServiceTest {
         List<Resource> resources = List.of(resource);
         List<ResourceResponse> responses = List.of(resourceResponse);
 
-        when(resourceRepository.findAllWithCharacteristics()).thenReturn(resources);
+        when(resourceRepository.findAllWithCharacteristics()).thenReturn(resources.stream());
         when(resourceMapper.toResponseList(resources)).thenReturn(responses);
 
         resourceService.exportAllToKafka();
@@ -338,7 +338,7 @@ class ResourceServiceTest {
         List<Resource> resources = List.of(resource);
         List<ResourceResponse> responses = List.of(resourceResponse);
 
-        when(resourceRepository.findAllWithCharacteristics()).thenReturn(resources);
+        when(resourceRepository.findAllWithCharacteristics()).thenReturn(resources.stream());
         when(resourceMapper.toResponseList(resources)).thenReturn(responses);
 
         List<ResourceResponse> result = resourceService.getAllResourcesForExport();
