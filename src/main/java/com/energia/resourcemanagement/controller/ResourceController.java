@@ -91,7 +91,7 @@ public class ResourceController {
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Export initiated successfully");
         response.put("totalResources", totalCount);
-        response.put("estimatedTime", "~" + (totalCount / 100) + " seconds");
+        response.put("estimatedTime", "~" + (totalCount / 1000000) + " seconds");
         response.put("jobId", UUID.randomUUID());
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);

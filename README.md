@@ -76,8 +76,8 @@ Every resource operation automatically publishes events to `resource-events` top
 
 ## Sample Data
 
-- **500,000 resources** (250K Metering Points + 250K Connection Points)
-- **~1.25M characteristics** (average 2.5 per resource)
+- **100,000 resources** (50K Metering Points + 50K Connection Points)
+- **~250,000 characteristics** (average 2.5 per resource)
 - **Distribution**: 50% Estonia (EE), 50% Finland (FI)
 - **Cities**: Tallinn, Tartu, Narva (EE) / Helsinki, Turku, Tampere (FI)
 - **Generation time**: ~2 minutes on first startup

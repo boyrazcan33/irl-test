@@ -22,10 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -150,6 +147,7 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     // CHANGED: Complete method replacement - stream-based implementation
+
     @Override
     @Transactional(readOnly = true)
     public void exportAllToKafka() {
@@ -158,15 +156,26 @@ public class ResourceServiceImpl implements ResourceService {
 
         try (Stream<Resource> stream = resourceRepository.findAllWithCharacteristics()) {
 
-            stream.collect(Collectors.groupingBy(resource ->
-                            totalProcessed.getAndIncrement() / 20000))
-                    .values()
-                    .parallelStream()
-                    .forEach(chunk -> {
-                        List<ResourceResponse> responses = resourceMapper.toResponseList(chunk);
-                        eventProducer.sendBulkExport(responses);
-                        log.info("Processed chunk, total: {}", totalProcessed.get());
-                    });
+            List<Resource> batch = new ArrayList<>(20000);
+
+            stream.forEach(resource -> {
+                batch.add(resource);
+
+                if (batch.size() >= 20000) {
+                    List<ResourceResponse> responses = resourceMapper.toResponseList(batch);
+                    eventProducer.sendBulkExport(responses);
+
+                    log.info("Processed chunk, total: {}", totalProcessed.addAndGet(20000));
+                    batch.clear();
+                }
+            });
+
+            // Last Batch
+            if (!batch.isEmpty()) {
+                List<ResourceResponse> responses = resourceMapper.toResponseList(batch);
+                eventProducer.sendBulkExport(responses);
+                totalProcessed.addAndGet(batch.size());
+            }
         }
 
         log.info("Stream export completed. Total: {}", totalProcessed.get());

@@ -29,11 +29,11 @@ public class DataInitializer {
     public void generateLargeDataset() {
         Long currentCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM resources", Long.class);
 
-        if (currentCount != null && currentCount < 500000) {
-            log.info("Starting JDBC batch insert for {} resources...", 500000 - currentCount);
+        if (currentCount != null && currentCount < 100000) {
+            log.info("Starting JDBC batch insert for {} resources...", 100000 - currentCount);
             long startTime = System.currentTimeMillis();
 
-            generateBulkResourcesWithJDBC(500000 - currentCount.intValue());
+            generateBulkResourcesWithJDBC(100000 - currentCount.intValue());
 
             long duration = System.currentTimeMillis() - startTime;
             log.info("Completed in {} seconds", duration / 1000);
