@@ -23,5 +23,5 @@ public interface ResourceService {
 
     void exportAllToKafka();
 
-    List<ResourceResponse> getAllResourcesForExport();
+    long getTotalResourceCount();
 }

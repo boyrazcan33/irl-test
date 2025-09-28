@@ -85,13 +85,13 @@ public class ResourceController {
     public ResponseEntity<Map<String, Object>> exportAllResources() {
         log.info("POST /api/v1/resources/export-all - Initiating bulk export");
 
-        List<ResourceResponse> resources = resourceService.getAllResourcesForExport();
+        long totalCount = resourceService.getTotalResourceCount();
         resourceService.exportAllToKafka();
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Export initiated successfully");
-        response.put("totalResources", resources.size());
-        response.put("estimatedTime", "~" + (resources.size() / 100) + " seconds");
+        response.put("totalResources", totalCount);
+        response.put("estimatedTime", "~" + (totalCount / 100) + " seconds");
         response.put("jobId", UUID.randomUUID());
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);

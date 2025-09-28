@@ -42,7 +42,7 @@ public class ResourceEventProducer {
         log.info("Sending bulk export with {} resources", resources.size());
 
         // Send in batches to avoid message size limits
-        int batchSize = 100;
+        int batchSize = 1000;
         for (int i = 0; i < resources.size(); i += batchSize) {
             int end = Math.min(i + batchSize, resources.size());
             List<ResourceResponse> batch = resources.subList(i, end);

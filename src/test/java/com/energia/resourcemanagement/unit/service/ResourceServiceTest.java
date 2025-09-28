@@ -333,17 +333,5 @@ class ResourceServiceTest {
         verify(eventProducer).sendBulkExport(responses);
     }
 
-    @Test
-    void getAllResourcesForExport_Success() {
-        List<Resource> resources = List.of(resource);
-        List<ResourceResponse> responses = List.of(resourceResponse);
 
-        when(resourceRepository.findAllWithCharacteristics()).thenReturn(resources.stream());
-        when(resourceMapper.toResponseList(resources)).thenReturn(responses);
-
-        List<ResourceResponse> result = resourceService.getAllResourcesForExport();
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getId()).isEqualTo(resourceId);
-    }
 }

@@ -29,7 +29,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -175,13 +174,11 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ResourceResponse> getAllResourcesForExport() {
-        // CHANGED: Modified to use streaming approach for consistency
-        try (Stream<Resource> stream = resourceRepository.findAllWithCharacteristics()) {
-            List<Resource> resources = stream.collect(Collectors.toList());
-            return resourceMapper.toResponseList(resources);
-        }
+    public long getTotalResourceCount() {
+        return resourceRepository.count();
     }
+
+
 
     private void validateCharacteristics(List<com.energia.resourcemanagement.dto.common.CharacteristicDTO> characteristics) {
         Set<String> seen = new HashSet<>();
