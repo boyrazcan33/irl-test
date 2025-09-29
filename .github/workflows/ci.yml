@@ -28,6 +28,8 @@ jobs:
             ${{ runner.os }}-maven-
 
       # Compile, test, and verify the package.
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
       - name: Build and Verify
         run: ./mvnw clean verify
 
